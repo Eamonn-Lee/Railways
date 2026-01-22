@@ -57,7 +57,6 @@ export class Graph {
         if (!this.adjacencylist.has(id)){
             throw new Error(`Station with ID "${id}" not found.`)
         };
-        
         return this.adjacencylist.get(id)!;
         */
 
