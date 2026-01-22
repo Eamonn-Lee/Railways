@@ -1,0 +1,28 @@
+name: CI  #Title
+
+on:       # when to trigger? whenever you touch(push, pull req) main
+  push:
+    branches: [ "main" ]
+  pull_request: #asking to merge onto main
+    branches: [ "main" ]
+
+jobs:     #what to do?
+  test-suite:
+    name: npm unit tests
+    runs-on: ubuntu-latest #environment/vm to run on
+
+    steps: #how do I actually run your tests
+      - name: Checkout code # checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup node.js v20 #install node package manager
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'          #save downloaded packages for future tests
+
+      - name: Install dependencies #install packages
+        run: npm ci
+
+      - name: Run Vitests
+        run: npm test
