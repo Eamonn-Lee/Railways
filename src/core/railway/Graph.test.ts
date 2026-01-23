@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Graph, Station, Track } from './Graph';
+import { Graph, type Station, type Track } from './Graph';
 
 // ------------------------------------------------------------------
 // TEST DATA GENERATORS

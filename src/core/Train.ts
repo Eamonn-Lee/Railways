@@ -35,15 +35,17 @@ export class Train {
     public getTargetStation(): string | null { return this.target; }
     public getCurrentTrack(): string | null { return this.heldTrack; }
 
-    public setDestination(destStation: string) {
+    public setDestination(destStation: string): boolean {
         const plan = this.navigator.findPath(this.current, destStation);
         if (plan === null) {
-            console.warn(`[Train ${this.getTrainId()}] Failed find path ${this.getCurrentStation()}->${destStation}`)
+            console.warn(`[Train ${this.getTrainId()}] Failed find path ${this.getCurrentStation()}->${destStation}`);
+            return false;
         } else {
             this.target = destStation
             this.route = plan;
             this.status = "WAITING";
-            console.log(`[Train ${this.getTrainId()}] Ready ${this.getCurrentStation()}->${this.getTargetStation()} @ ${plan.totalCost}: \n       ${plan.path}`)
+            console.log(`[Train ${this.getTrainId()}] Ready ${this.getCurrentStation()}->${this.getTargetStation()} @ ${plan.totalCost}: \n       ${plan.path}`);
+            return true;
         }
     }
 
