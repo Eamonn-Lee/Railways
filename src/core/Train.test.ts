@@ -67,8 +67,9 @@ describe("Train Simulation Logic", () => {
         expect(train.getCurrentStation()).toBe("B"); 
         expect(train.getCurrentStatus()).toBe("MOVING");
         
-        // Verify Lock: Train should hold 't1' now
-        expect(manager.isLocked("t1")).toBe(true);
+        // Verify Lock: Logic changed to Instant Release.
+        // Train moved to B, so 't1' should now be FREE.
+        expect(manager.isLocked("t1")).toBe(false);
         expect(manager.isLocked("t2")).toBe(false);
 
         // --- TICK 2: Move B -> C ---
@@ -76,15 +77,15 @@ describe("Train Simulation Logic", () => {
         expect(moved2).toBe(true);
         expect(train.getCurrentStation()).toBe("C");
 
-        // Verify Handoff: Should have released 't1' and grabbed 't2'
-        expect(manager.isLocked("t1")).toBe(false); // RELEASED!
-        expect(manager.isLocked("t2")).toBe(true);  // HELD!
+        // Verify Handoff: Train moved to C, so 't2' is also released immediately.
+        expect(manager.isLocked("t1")).toBe(false); 
+        expect(manager.isLocked("t2")).toBe(false);  
 
         // --- TICK 3: Arrival Cleanup ---
         const moved3 = train.update();
         expect(moved3).toBe(true);
         expect(train.getCurrentStatus()).toBe("IDLE");
-        expect(manager.isLocked("t2")).toBe(false); // Final release
+        expect(manager.isLocked("t2")).toBe(false); 
     });
 
     it("should handle Bidirectional Travel (The Return Trip C -> A)", () => {
@@ -97,12 +98,13 @@ describe("Train Simulation Logic", () => {
         // --- TICK 1: Move C -> B (Using t2 backwards) ---
         train.update();
         expect(train.getCurrentStation()).toBe("B"); // Critical Check: Did logic work?
-        expect(manager.isLocked("t2")).toBe(true);
+        // Instant Release: Lock is freed as soon as we arrive at B
+        expect(manager.isLocked("t2")).toBe(false);
 
         // --- TICK 2: Move B -> A (Using t1 backwards) ---
         train.update();
         expect(train.getCurrentStation()).toBe("A");
-        expect(manager.isLocked("t1")).toBe(true);
+        expect(manager.isLocked("t1")).toBe(false); // Instant Release
         expect(manager.isLocked("t2")).toBe(false);
     });
 
@@ -193,30 +195,24 @@ describe("Edge Cases & Stress Tests", () => {
     });
 
     it("should handle the 'Boomerang' (A -> B -> A) without deadlocking", () => {
-        /* * THE DEADLOCK TRAP:
-            * 1. Train moves A -> B. It holds Lock 't1'.
-            * 2. Train wants to move B -> A. It needs Lock 't1'.
-            * 3. It asks ConflictManager: "Can I lock t1?"
-            * 4. Manager sees 't1' is locked (by THIS train) and might say NO.
-            * 5. Train waits forever for itself.
+        /* * THE DEADLOCK TRAP FIXED:
+            * New Logic: Train moves A->B and releases lock immediately.
+            * Return trip B->A sees track as free.
             */
         const train = new Train("T_BOOM", "A", graph, manager);
-        
-        // Manually force a path: [t1] (to B), then [t1] (back to A)
-        // Note: Since we can't easily force Dijkstra to do A->B->A in one go 
-        // without a cost incentive, we simulate two commands.
         
         // Leg 1: A -> B
         train.setDestination("B");
         train.update(); 
         expect(train.getCurrentStation()).toBe("B");
-        expect(manager.isLocked("t1")).toBe(true); // We hold the track
+        
+        // EXPECT CHANGE: Lock is released immediately upon arrival at B
+        expect(manager.isLocked("t1")).toBe(false); 
 
         // Leg 2: B -> A (Immediate return)
         train.setDestination("A"); 
         const success = train.update();
 
-        // IF THIS FAILS: Your ConflictManager/Train logic treats "Self-Locking" as a conflict.
         expect(success).toBe(true); 
         expect(train.getCurrentStation()).toBe("A");
     });

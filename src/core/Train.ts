@@ -71,33 +71,24 @@ export class Train {
         const next = remaining.at(0)!;
 
         if (this.conflictCopy.attemptLock(next, this.id) ) {
-            //train now has lock
-            const tempLock = this.heldTrack;
-            this.heldTrack = next;
-
-            //=======STATECHANGE======
-
-
-            if (tempLock !== null) { //need to release lock
-                this.conflictCopy.releaseLock(tempLock, this.id);
-                //check recovery if needed, early end before we alter state
-            }
-
-            //const release = ; 
-            //CONDUCT CHECK TO ENSURE THIS TRACK EXISTED?
-
-            const release = this.graph.getTrack(remaining[0]);
-            if (release === null) {
-                //track doesn't exist???
+            // get info of new track
+            const release = this.graph.getTrack(next);
+            if (release === null) { //  unable to get track?
+                console.warn(`[Train ${this.getTrainId()}] ERROR: ${next} track does not exist?`)
                 return false;
             }
-            this.current = (release.source === this.current) ? release.target : release.source; //calculating correct bidirectionality
-            remaining.shift();  //pop off track we're now on
-            this.status = "MOVING"; //update status
-            console.log(`[Train ${this.getTrainId()}] MOVE from ${release.id}: ON ${this.getCurrentTrack()}`);
-            //===============================
-            return true;
 
+            // Move train to next station
+            this.current = (release.source === this.current) ? release.target : release.source; //calculate correct bidirectionality
+            remaining.shift();  //rmv track currently on
+            this.status = "MOVING";
+            
+            // Unlock path
+            this.conflictCopy.releaseLock(next, this.id);
+            this.heldTrack = null;
+
+            console.log(`[Train ${this.getTrainId()}] MOVE to ${this.current}`);
+            return true;
         } else {
             this.status = "WAITING";
             console.log(`[Train ${this.getTrainId()}] WAIT @ ${this.getCurrentTrack()}: REQ ${next}`);

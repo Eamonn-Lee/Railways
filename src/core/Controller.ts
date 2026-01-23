@@ -6,7 +6,6 @@ export interface TrainData {    //snapshot into life of a train
     id: string;
     location: string;
     destination: string | null;
-    currentTrack: string | null;
     status: string;
 }
 
@@ -44,7 +43,6 @@ export class Controller {
             id: t.getTrainId(),
             location: t.getCurrentStation(),
             destination: t.getTargetStation(),
-            currentTrack: t.getCurrentTrack(),
             status: t.getCurrentStatus(),
         }))
     }
