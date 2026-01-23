@@ -250,7 +250,8 @@ describe("Edge Cases & Stress Tests", () => {
         
         // Inject a fake route with a non-existent track ID
         // (We have to cast to 'any' to violate private access for this stress test)
-        (train as any).route = { path: ["non_existent_track"], totalCost: 0 };
+        // @ts-expect-error: silence lint
+        (train as unknown).route = { path: ["non_existent_track"], totalCost: 0 };
         
         // Should return false (safely fail), NOT throw Exception
         const result = train.update();
