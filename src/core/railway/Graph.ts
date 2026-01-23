@@ -17,10 +17,12 @@ export interface Track {
 
 export class Graph {
     private stations: Map<string, Station>;         //st_id * item
+    private tracks: Map<string, Track>;
     private adjacencylist: Map<string, Track[]>;    //st_id * list of tracks
 
     constructor() {
         this.stations = new Map();
+        this.tracks = new Map();
         this.adjacencylist = new Map();
     }
 
@@ -32,6 +34,10 @@ export class Graph {
         return true;
     }
     public addTrack(track: Track): boolean {
+        if (this.tracks.has(track.id)) {
+            return false;
+        }
+
         const statS = track.source; //does this optimise because we don't need to continuously reaccess inside track?
         const statD = track.target;
 
@@ -46,6 +52,7 @@ export class Graph {
         if (adjSour.some(t => (t.id === track.id)) || adjTarg.some(t => (t.id === track.id))) {return false;} //tracks already exist in one
 
         //Track does not exist, new track
+        this.tracks.set(track.id, track);
         adjSour.push(track);
         adjTarg.push(track);
 
@@ -61,6 +68,10 @@ export class Graph {
         */
 
         return this.adjacencylist.get(id) ?? [];    //example of ??
+    }
+
+    public getTrack(id:string) : Track | null {
+        return (this.tracks.has(id)) ? this.tracks.get(id)! : null;
     }
 }
 

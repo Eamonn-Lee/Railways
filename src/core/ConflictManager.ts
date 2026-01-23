@@ -16,6 +16,8 @@ export class ConflictManager {
     }
 
     public attemptLock(trackId:string, trainId:string): boolean {
+        if (this.locks.get(trackId)?.trainId === trainId) { return true };  //if no track id, resolves to undefined, then stops further operation. normal logic flow
+
         if (!this.locks.has(trackId)) { //if no lock held
             this.locks.set(trackId, {trainId, timestamp: new Date().valueOf()})
             return true;

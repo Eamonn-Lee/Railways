@@ -43,6 +43,54 @@ describe('Graph System', () => {
     });
   });
 
+  describe("Graph Registry & Lookups", () => {
+    let graph: Graph;
+
+    beforeEach(() => {
+        graph = new Graph();
+        // Setup: We need two stations to create a track
+        graph.addStation({ id: "A", name: "Station A", x: 0, y: 0 });
+        graph.addStation({ id: "B", name: "Station B", x: 10, y: 10 });
+    });
+
+    it("should store and retrieve a track by its ID", () => {
+        const track = { id: "t1", source: "A", target: "B", baseCost: 100 };
+        graph.addTrack(track);
+
+        // The New Feature Test
+        const retrieved = graph.getTrack("t1");
+        
+        expect(retrieved).toBeDefined();
+        expect(retrieved?.id).toBe("t1");
+        expect(retrieved?.baseCost).toBe(100);
+    });
+
+    it("should return undefined for non-existent tracks", () => {
+        const result = graph.getTrack("ghost_track");
+        expect(result).toBeNull();
+    });
+
+    it("should prevent duplicate track IDs from being added", () => {
+        const track1 = { id: "t1", source: "A", target: "B", baseCost: 10 };
+        // Even if it's a "different" track physically, the ID must be unique
+        const track2 = { id: "t1", source: "B", target: "A", baseCost: 20 }; 
+
+        expect(graph.addTrack(track1)).toBe(true);
+        expect(graph.addTrack(track2)).toBe(false); // Should fail
+    });
+
+    it("should have consistent data between adjacency list and track registry", () => {
+        const track = { id: "t1", source: "A", target: "B", baseCost: 50 };
+        graph.addTrack(track);
+
+        const neighborTrack = graph.getNeighbours("A")[0];
+        const registryTrack = graph.getTrack("t1");
+
+        // Verify both point to the same object data
+        expect(neighborTrack).toEqual(registryTrack);
+    });
+  });
+
   // ----------------------------------------------------------------
   // 2. TRACK MANAGEMENT (The "Happy Path")
   // ----------------------------------------------------------------
